@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "server": "nodemon src/index.js",
     "client": "npm run start --prefix ../frontend",
-    "dev": "concurrently --kill-others-on-fail \"npm run server\" "
+    "server": "node src/index.js",
+    "dev": "nodemon src/index.js"
   },
   "proxy": "http://localhost:3000",
   "keywords": [],
