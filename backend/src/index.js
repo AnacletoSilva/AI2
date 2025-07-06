@@ -41,7 +41,7 @@ app.use(cors({
   origin: function (origin, callback) {
     // Lista de origens permitidas
     const allowedOrigins = [
-      'https://ai2-2.onrender.com', // Substitua pelo seu URL real
+      'https://ai2-2.onrender.com',
       'http://localhost:3000' // Para desenvolvimento
     ];
     
