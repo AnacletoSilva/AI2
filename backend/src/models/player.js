@@ -36,9 +36,8 @@ const Player = SequelizeDB.define('Player', {
         allowNull: false
     }
 }, {
-    timestamps: false
+    timestamps: false,
+    tableName: 'players'
 });
-
-Player.sync();
 
 module.exports = Player;
