@@ -2,11 +2,39 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors'); // Adicione esta linha
 const app = express();
+const bcrypt  = require('bcryptjs');
+const pool    = require('./db');
 const playerRoute = require('./routes/playerRoute');
 const teamRoute = require('./routes/teamRoute');
 const sequelize = require('./models/database');
 
 app.set('port', process.env.PORT || 8080);
+
+app.post('/auth/admin-login', async (req, res) => {
+  const { password } = req.body;
+  try {
+    // busca o hash do admin com id = 1
+    const { rows } = await pool.query(
+      'SELECT password_hash FROM admins WHERE id = $1',
+      [1]
+    );
+    if (rows.length === 0) {
+      return res.status(500).json({ success: false, message: 'Admin não configurado' });
+    }
+
+    const hash = rows[0].password_hash;
+    const match = await bcrypt.compare(password, hash);
+    if (match) {
+      return res.json({ success: true });
+    } else {
+      return res.status(401).json({ success: false, message: 'Senha incorreta' });
+    }
+
+  } catch (err) {
+    console.error('Erro no admin-login:', err);
+    res.status(500).json({ success: false, message: 'Erro no servidor' });
+  }
+});
 
 // Configuração PROFISSIONAL de CORS
 app.use(cors({

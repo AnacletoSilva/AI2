@@ -12,6 +12,7 @@ import Updateteam from './view/updateteam';
 import Listplayer from './view/listplayer';
 import Createplayer from './view/createplayer';
 import Updateplayer from './view/updateplayer';
+import axios from 'axios';
 
 import logo from './images/Liga_Portugal_Betclic_2023.png';
 
@@ -20,8 +21,6 @@ function App() {
   const [showModal, setShowModal] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
 
-  // Hash bcrypt já gerado; confere com bcrypt.compare()
-  const CORRECT = "$2a$10$CcFkiefeF9sXkjdcUCStAuPZX.C63w0cV3sZDozVuSrX35kAIkAmS";
 
   const toggleMode = () => {
     if (isAdmin) {
@@ -32,16 +31,27 @@ function App() {
   };
 
   const handleSubmit = async () => {
-    // compara plaintext vs hash
-    const match = await bcrypt.compare(passwordInput, CORRECT);
-    if (match) {
+  try {
+    const res = await axios.post(
+      `${API_BASE_URL}/auth/admin-login`,
+      { password: passwordInput }
+    );
+    if (res.data.success) {
       setIsAdmin(true);
       setShowModal(false);
       setPasswordInput("");
     } else {
-      alert("Senha incorreta");
+      alert(res.data.message || "Erro desconhecido");
     }
-  };
+  } catch (err) {
+    if (err.response && err.response.status === 401) {
+      alert("Senha incorreta");
+    } else {
+      alert("Falha ao conectar ao servidor");
+      console.error(err);
+    }
+  }
+};
 
   return (
     <Router>
