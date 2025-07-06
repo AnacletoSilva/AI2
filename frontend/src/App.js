@@ -13,7 +13,7 @@ import Listplayer from './view/listplayer';
 import Createplayer from './view/createplayer';
 import Updateplayer from './view/updateplayer';
 import axios from 'axios';
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL } from './config';
 
 import logo from './images/Liga_Portugal_Betclic_2023.png';
 
