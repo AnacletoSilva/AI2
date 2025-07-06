@@ -135,7 +135,7 @@ export default function Tabela({ isAdmin }) {
                       t => !selectedTeams.includes(String(t.id)) || selectedTeams[i] === String(t.id)
                     );
                     const positionClass = 
-                      i <= 1 ? 'table-success' : 
+                      i < 1 ? 'table-success' : 
                       i >= 15 ? 'table-danger' : 
                       '';
                     
