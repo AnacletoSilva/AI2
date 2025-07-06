@@ -4,7 +4,6 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "client": "npm run start --prefix ../frontend",
     "server": "node src/index.js",
     "dev": "nodemon src/index.js"
   },
