@@ -19,15 +19,12 @@ export default function UpdatePlayer() {
     golos: "",
     assistencias: ""
   });
-  
-  const [isLoading, setIsLoading] = useState(true);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState(null);
 
   // Carrega os dados do jogador
   useEffect(() => {
     const loadPlayerData = async () => {
       try {
-        setIsLoading(true);
         const response = await axios.get(`${API_BASE_URL}/player/get/${id}`);
         
         if (response.data.success && response.data.data) {
@@ -52,8 +49,6 @@ export default function UpdatePlayer() {
         });
         Swal.fire('Erro', 'Falha na conexão com o servidor', 'error');
         navigate('/player/list');
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -78,8 +73,6 @@ export default function UpdatePlayer() {
     }
 
     try {
-      setIsUpdating(true);
-      
       const response = await axios.put(
         `${API_BASE_URL}/player/update/${id}`,
         playerData,
@@ -107,25 +100,17 @@ export default function UpdatePlayer() {
         errorMsg = error.response.data.message;
       }
       Swal.fire('Erro', errorMsg, 'error');
-    } finally {
-      setIsUpdating(false);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="container mt-4 text-center">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">A Carregar...</span>
-        </div>
-        <p className="mt-3">A Carregar dados do jogador...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="container mt-4">
       <h3>Atualizar Jogador</h3>
+      {error && (
+        <div className="alert alert-danger">
+          {error}
+        </div>
+      )}
       <div className="form-row justify-content-center">
         <div className="form-group col-md-6 mt-2">
           <label>Nome do Jogador:</label>
@@ -135,7 +120,6 @@ export default function UpdatePlayer() {
             name="Nome"
             value={playerData.Nome}
             onChange={handleInputChange}
-            disabled={isUpdating}
           />
         </div>
         
@@ -149,7 +133,6 @@ export default function UpdatePlayer() {
             onChange={handleInputChange}
             min="16"
             max="45"
-            disabled={isUpdating}
           />
         </div>
         
@@ -161,7 +144,6 @@ export default function UpdatePlayer() {
             name="posicao"
             value={playerData.posicao}
             onChange={handleInputChange}
-            disabled={isUpdating}
           />
         </div>
         
@@ -175,7 +157,6 @@ export default function UpdatePlayer() {
             onChange={handleInputChange}
             min="150"
             max="220"
-            disabled={isUpdating}
           />
         </div>
         
@@ -188,7 +169,6 @@ export default function UpdatePlayer() {
             value={playerData.golos}
             onChange={handleInputChange}
             min="0"
-            disabled={isUpdating}
           />
         </div>
         
@@ -201,7 +181,6 @@ export default function UpdatePlayer() {
             value={playerData.assistencias}
             onChange={handleInputChange}
             min="0"
-            disabled={isUpdating}
           />
         </div>
       </div>
@@ -210,7 +189,6 @@ export default function UpdatePlayer() {
         <button 
           className="btn btn-secondary"
           onClick={() => navigate('/player/list')}
-          disabled={isUpdating}
         >
           Cancelar
         </button>
@@ -218,14 +196,8 @@ export default function UpdatePlayer() {
         <button 
           className="btn btn-primary"
           onClick={sendUpdate}
-          disabled={isUpdating}
         >
-          {isUpdating ? (
-            <>
-              <span className="spinner-border spinner-border-sm" role="status"></span>
-              <span className="ms-2">A Atualizar...</span>
-            </>
-          ) : 'Atualizar Jogador'}
+          Atualizar Jogador
         </button>
       </div>
     </div>

@@ -10,13 +10,11 @@ export default function Tabela({ isAdmin }) {
   const [selectedEmblems, setSelectedEmblems] = useState(Array(18).fill(""));
   const [topgolos, setTopGolos] = useState([]);
   const [topassistencias, setTopAssistencias] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        setIsLoading(true);
         setError(null);
         
         // Carrega a lista de equipas
@@ -24,7 +22,6 @@ export default function Tabela({ isAdmin }) {
         if (!res.data.success) {
           throw new Error("Falha ao carregar equipas");
         }
-        
         const allTeams = res.data.data;
         setTeams(allTeams);
 
@@ -54,23 +51,21 @@ export default function Tabela({ isAdmin }) {
         setTopAssistencias(sortedA);
         
         // Carrega seleções salvas
-        const st = JSON.parse(localStorage.getItem('selectedTeams') || Array(18).fill(""));
-        const ct = JSON.parse(localStorage.getItem('counters') || Array(18).fill(""));
-        const se = JSON.parse(localStorage.getItem('selectedEmblems') || Array(18).fill(""));
+        const st = JSON.parse(localStorage.getItem('selectedTeams') || '[]');
+        const ct = JSON.parse(localStorage.getItem('counters') || '[]');
+        const se = JSON.parse(localStorage.getItem('selectedEmblems') || '[]');
         
-        setSelectedTeams(st);
-        setCounters(ct);
-        setSelectedEmblems(se);
+        if (st.length === 18) setSelectedTeams(st);
+        if (ct.length === 18) setCounters(ct);
+        if (se.length === 18) setSelectedEmblems(se);
 
-      } catch (error) {
+      } catch (err) {
         console.error("Erro ao carregar dados:", {
           URL: `${API_BASE_URL}/team/list`,
-          Error: error.message,
-          Response: error.response?.data
+          Error: err.message,
+          Response: err.response?.data
         });
         setError("Erro ao carregar dados. Tente recarregar a página.");
-      } finally {
-        setIsLoading(false);
       }
     }
     
@@ -91,22 +86,18 @@ export default function Tabela({ isAdmin }) {
   };
 
   const handleCounterChange = (i, v) => {
-    // Garante que o valor seja numérico e não negativo
-    const value = Math.max(0, parseInt(v) || "");
-    
+    const value = Math.max(0, parseInt(v) || 0);
     const updatedCounters = [...counters];
     updatedCounters[i] = value;
     setCounters(updatedCounters);
     localStorage.setItem('counters', JSON.stringify(updatedCounters));
   };
 
-  // Função para encontrar o nome da equipa pelo ID
   const getTeamName = (teamId) => {
     const team = teams.find(t => String(t.id) === String(teamId));
     return team ? team.nome_equipa : '-';
   };
 
-  // Função para encontrar a abreviação da equipa pelo ID
   const getTeamAbrev = (teamId) => {
     const team = teams.find(t => String(t.id) === String(teamId));
     return team ? team.abrev : '-';
@@ -116,18 +107,16 @@ export default function Tabela({ isAdmin }) {
     <div className="container mt-3">
       <h3 className="mb-4">Classificação da Liga</h3>
       
-      {isLoading ? (
-        <div className="text-center my-5">
-          <div className="spinner-border text-primary" style={{ width: '3rem', height: '3rem' }} role="status">
-            <span className="visually-hidden">A Carregar...</span>
-          </div>
-          <p className="mt-3">A carregar dados da liga...</p>
-        </div>
-      ) : error ? (
+      {error && (
         <div className="alert alert-danger">
-          {error} <button className="btn btn-link p-0" onClick={() => window.location.reload()}>Recarregar página</button>
+          {error}{" "}
+          <button className="btn btn-link p-0" onClick={() => window.location.reload()}>
+            Recarregar página
+          </button>
         </div>
-      ) : (
+      )}
+
+      {!error && (
         <div className="row">
           <div className="col-lg-8 mb-4">
             <div className="table-responsive">
@@ -142,12 +131,9 @@ export default function Tabela({ isAdmin }) {
                 </thead>
                 <tbody>
                   {Array.from({ length: 18 }, (_, i) => {
-                    // Filtra equipas disponíveis para seleção
                     const availableTeams = teams.filter(
                       t => !selectedTeams.includes(String(t.id)) || selectedTeams[i] === String(t.id)
                     );
-                    
-                    // Classes de destaque para posições
                     const positionClass = 
                       i < 4 ? 'table-success' : 
                       i >= 14 ? 'table-danger' : 

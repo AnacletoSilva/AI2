@@ -13,7 +13,7 @@ export default function CreateTeam() {
   const [ano_fundacao, setAnoFundacao] = useState("");
   const [nome_estadio, setNomeEstadio] = useState("");
   const [emblema, setEmblema] = useState("");
-  const [isLoading, setIsLoading] = useState(false); // Estado para loading
+  
 
   const navigate = useNavigate();
 
@@ -26,7 +26,7 @@ export default function CreateTeam() {
     if (!nome_estadio)  return alert("Preenche o nome do estádio!");
     if (!emblema)       return alert("Insere o URL do emblema!");
 
-    setIsLoading(true);
+    
     
     // Use API_BASE_URL em vez de localhost
     const url = `${API_BASE_URL}/team/create`;
@@ -63,8 +63,6 @@ export default function CreateTeam() {
         errorMessage += `: ${error.message}`;
       }
       alert(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   }
 
@@ -81,7 +79,7 @@ export default function CreateTeam() {
             placeholder="Nome da equipa"
             value={nome_equipa}
             onChange={e => setNomeEquipa(e.target.value)}
-            disabled={isLoading}
+            
           />
         </div>
 
@@ -94,7 +92,7 @@ export default function CreateTeam() {
             placeholder="Abreviatura"
             value={abrev}
             onChange={e => setAbrev(e.target.value)}
-            disabled={isLoading}
+            
           />
         </div>
 
@@ -107,7 +105,7 @@ export default function CreateTeam() {
             placeholder="Ano de fundação"
             value={ano_fundacao}
             onChange={e => setAnoFundacao(e.target.value)}
-            disabled={isLoading}
+            
           />
         </div>
 
@@ -120,7 +118,7 @@ export default function CreateTeam() {
             placeholder="Nome do estádio"
             value={nome_estadio}
             onChange={e => setNomeEstadio(e.target.value)}
-            disabled={isLoading}
+            
           />
         </div>
 
@@ -133,7 +131,7 @@ export default function CreateTeam() {
             placeholder="URL do emblema"
             value={emblema}
             onChange={e => setEmblema(e.target.value)}
-            disabled={isLoading}
+            
           />
         </div>
       </div>
@@ -142,16 +140,7 @@ export default function CreateTeam() {
       <button
         type="button"
         className="btn btn-primary mt-3 bot"
-        onClick={sendSave}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <>
-            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            <span className="ml-2">A Processar...</span>
-          </>
-        ) : "Adicionar Equipa"}
-      </button>
+        onClick={() => SendSave()}>Adicionar</button>
     </div>
   );
 }

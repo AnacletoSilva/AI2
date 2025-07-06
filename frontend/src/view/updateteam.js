@@ -18,15 +18,12 @@ export default function UpdateTeam() {
     nome_estadio: "",
     emblema: ""
   });
-  
-  const [isLoading, setIsLoading] = useState(true);
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState(null);
 
   // Carrega os dados da equipa
   useEffect(() => {
     const loadTeamData = async () => {
       try {
-        setIsLoading(true);
         const response = await axios.get(`${API_BASE_URL}/team/get/${id}`);
         
         if (response.data.success && response.data.data) {
@@ -50,8 +47,6 @@ export default function UpdateTeam() {
         });
         Swal.fire('Erro', 'Falha na conexão com o servidor', 'error');
         navigate('/team/list');
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -74,7 +69,7 @@ export default function UpdateTeam() {
       return false;
     }
     
-    if (!teamData.abrev || teamData.abrev.length < 1 || teamData.abrev.length > 10) {
+    if (!teamData.abrev || teamData.abrev.length > 10) {
       Swal.fire('Atenção', 'Abreviatura deve ter entre 1 e 10 caracteres', 'warning');
       return false;
     }
@@ -103,14 +98,10 @@ export default function UpdateTeam() {
     if (!validateForm()) return;
     
     try {
-      setIsUpdating(true);
-      
       const response = await axios.put(
         `${API_BASE_URL}/team/update/${id}`,
         teamData,
-        {
-          headers: { 'Content-Type': 'application/json' }
-        }
+        { headers: { 'Content-Type': 'application/json' } }
       );
 
       if (response.data.success) {
@@ -120,9 +111,7 @@ export default function UpdateTeam() {
           icon: 'success',
           timer: 2000,
           showConfirmButton: false
-        }).then(() => {
-          navigate('/team/list');
-        });
+        }).then(() => navigate('/team/list'));
       } else {
         Swal.fire('Erro', response.data.message || 'Falha na atualização', 'error');
       }
@@ -132,31 +121,15 @@ export default function UpdateTeam() {
         Error: error.message,
         Response: error.response?.data
       });
-      
-      let errorMsg = 'Erro no servidor';
-      if (error.response?.data?.message) {
-        errorMsg = error.response.data.message;
-      }
+      let errorMsg = error.response?.data?.message || 'Erro no servidor';
       Swal.fire('Erro', errorMsg, 'error');
-    } finally {
-      setIsUpdating(false);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="container mt-4 text-center">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">A Carregar...</span>
-        </div>
-        <p className="mt-3">A Carregar dados da equipa...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="container mt-4">
       <h3>Atualizar Equipa</h3>
+      {error && <div className="alert alert-danger">{error}</div>}
       <div className="form-row justify-content-center">
         <div className="form-group col-md-6 mt-2">
           <label>Nome da Equipa:</label>
@@ -167,7 +140,6 @@ export default function UpdateTeam() {
             placeholder="Nome da equipa"
             value={teamData.nome_equipa}
             onChange={handleInputChange}
-            disabled={isUpdating}
           />
         </div>
         
@@ -180,7 +152,6 @@ export default function UpdateTeam() {
             placeholder="Abreviação"
             value={teamData.abrev}
             onChange={handleInputChange}
-            disabled={isUpdating}
           />
         </div>
         
@@ -195,7 +166,6 @@ export default function UpdateTeam() {
             onChange={handleInputChange}
             min="1800"
             max={new Date().getFullYear()}
-            disabled={isUpdating}
           />
         </div>
         
@@ -208,7 +178,6 @@ export default function UpdateTeam() {
             placeholder="Nome do estádio"
             value={teamData.nome_estadio}
             onChange={handleInputChange}
-            disabled={isUpdating}
           />
         </div>
         
@@ -221,7 +190,6 @@ export default function UpdateTeam() {
             placeholder="URL do emblema"
             value={teamData.emblema}
             onChange={handleInputChange}
-            disabled={isUpdating}
           />
           {teamData.emblema && (
             <div className="mt-2 text-center">
@@ -232,7 +200,7 @@ export default function UpdateTeam() {
                 style={{ maxWidth: '150px', maxHeight: '150px' }}
                 onError={(e) => {
                   e.target.onerror = null;
-                  e.target.parentNode.innerHTML = '<div class="alert alert-warning mt-2">URL inválido</div>';
+                  e.target.parentNode.innerHTML = '<div class=\"alert alert-warning mt-2\">URL inválido</div>';
                 }}
               />
             </div>
@@ -244,7 +212,6 @@ export default function UpdateTeam() {
         <button 
           className="btn btn-secondary"
           onClick={() => navigate('/team/list')}
-          disabled={isUpdating}
         >
           Cancelar
         </button>
@@ -252,14 +219,8 @@ export default function UpdateTeam() {
         <button 
           className="btn btn-primary"
           onClick={sendUpdate}
-          disabled={isUpdating}
         >
-          {isUpdating ? (
-            <>
-              <span className="spinner-border spinner-border-sm" role="status"></span>
-              <span className="ms-2">A Atualizar...</span>
-            </>
-          ) : 'Atualizar Equipa'}
+          Atualizar Equipa
         </button>
       </div>
     </div>

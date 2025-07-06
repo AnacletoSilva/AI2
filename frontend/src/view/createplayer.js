@@ -14,7 +14,7 @@ export default function CreatePlayer() {
     const [altura, setAltura] = useState("");
     const [golos, setGolos] = useState("");
     const [assistencias, setAssistencias] = useState("");
-    const [isLoading, setIsLoading] = useState(false); // Estado para loading
+    
 
     function SendSave() {
         if (Nome === "" || idade === "" || posicao === "" || altura === "" || golos === "" || assistencias === "") {
@@ -22,7 +22,7 @@ export default function CreatePlayer() {
             return;
         }
 
-        setIsLoading(true);
+        
         
         const url = `${API_BASE_URL}/player/create`; // Use a URL base da configuração
         const datapost = {
@@ -59,9 +59,7 @@ export default function CreatePlayer() {
                 });
                 alert("Erro ao criar jogador: " + (error.response?.data?.message || error.message));
             })
-            .finally(() => {
-                setIsLoading(false);
-            });
+            
     }
 
     return (
@@ -74,7 +72,7 @@ export default function CreatePlayer() {
                         className="form-control"
                         value={Nome}
                         onChange={e => setNomePlayer(e.target.value)}
-                        disabled={isLoading} />
+                        />
                 </div>
                 <div className='form-group col-md-6 mt-2'>
                     <label>Idade:</label>
@@ -82,7 +80,7 @@ export default function CreatePlayer() {
                         className="form-control"
                         value={idade}
                         onChange={e => setIdade(e.target.value)}
-                        disabled={isLoading} />
+                         />
                 </div>
                 <div className='form-group col-md-6 mt-2'>
                     <label>Posição:</label>
@@ -90,7 +88,7 @@ export default function CreatePlayer() {
                         className="form-control"
                         value={posicao}
                         onChange={e => setPosicao(e.target.value)}
-                        disabled={isLoading} />
+                         />
                 </div>
                 <div className='form-group col-md-6 mt-2'>
                     <label>Altura (cm):</label>
@@ -98,7 +96,7 @@ export default function CreatePlayer() {
                         className="form-control"
                         value={altura}
                         onChange={e => setAltura(e.target.value)}
-                        disabled={isLoading} />
+                         />
                 </div>
                 <div className='form-group col-md-6 mt-2'>
                     <label>Golos:</label>
@@ -106,7 +104,7 @@ export default function CreatePlayer() {
                         className="form-control"
                         value={golos}
                         onChange={e => setGolos(e.target.value)}
-                        disabled={isLoading} />
+                         />
                 </div>
                 <div className='form-group col-md-6 mt-2'>
                     <label>Assistências:</label>
@@ -114,21 +112,13 @@ export default function CreatePlayer() {
                         className="form-control"
                         value={assistencias}
                         onChange={e => setAssistencias(e.target.value)}
-                        disabled={isLoading} />
+                         />
                 </div>
             </div>
             <button 
                 type="submit" 
                 className="btn btn-primary mt-3 bot" 
-                onClick={SendSave}
-                disabled={isLoading}>
-                {isLoading ? (
-                    <>
-                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        <span className="ml-2">A Processar...</span>
-                    </>
-                ) : "Adicionar"}
-            </button>
+                onClick={() => SendSave()}>Adicionar</button>
         </div>
     );
 }
