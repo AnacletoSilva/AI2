@@ -4,8 +4,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import "../css/Tabela.css";
-
-const baseUrl = "http://localhost:8080";
+import { API_BASE_URL } from '../config'; // Importe a URL base da configuração
 
 export default function CreateTeam() {
   // Estados para cada campo do formulário
@@ -14,26 +13,27 @@ export default function CreateTeam() {
   const [ano_fundacao, setAnoFundacao] = useState("");
   const [nome_estadio, setNomeEstadio] = useState("");
   const [emblema, setEmblema] = useState("");
+  const [isLoading, setIsLoading] = useState(false); // Estado para loading
 
   const navigate = useNavigate();
 
   // Função que envia o POST para criar a equipa
   async function sendSave() {
-    // Validações simples
+    // Validações
     if (!nome_equipa) return alert("Preenche o nome da equipa!");
     if (!abrev)         return alert("Preenche a abreviatura!");
     if (!ano_fundacao)  return alert("Preenche o ano de fundação!");
     if (!nome_estadio)  return alert("Preenche o nome do estádio!");
     if (!emblema)       return alert("Insere o URL do emblema!");
 
-    const url = `${baseUrl}/team/create`;
+    setIsLoading(true);
+    
+    // Use API_BASE_URL em vez de localhost
+    const url = `${API_BASE_URL}/team/create`;
     const datapost = { nome_equipa, abrev, ano_fundacao, nome_estadio, emblema };
-
-    console.log("Enviando dados para criar equipa:", datapost);
 
     try {
       const response = await axios.post(url, datapost);
-      console.log("Resposta do servidor:", response.data);
 
       if (response.data.success) {
         alert(response.data.message);
@@ -43,19 +43,28 @@ export default function CreateTeam() {
         setAnoFundacao("");
         setNomeEstadio("");
         setEmblema("");
-        // Redireciona para a listagem de equipas, se quiseres:
-        // navigate('/team/list');
+        // Redireciona para a listagem de equipas
+        navigate('/team/list');
       } else {
         alert("Falha ao adicionar equipa: " + response.data.message);
       }
     } catch (error) {
-      // Mostra o erro completo no console para saber o que está a falhar
-      console.error(" Erro ao adicionar equipa (status, data, mensagem):",
-        error.response?.status,
-        error.response?.data,
-        error.message
-      );
-      alert(`Erro ao adicionar equipa: ${error.response?.status || ''} ${error.message}`);
+      console.error("Erro ao criar equipa:", {
+        URL: url,
+        Method: "POST",
+        Error: error.message,
+        Response: error.response?.data
+      });
+      
+      let errorMessage = "Erro ao adicionar equipa";
+      if (error.response) {
+        errorMessage += `: ${error.response.status} - ${error.response.data.message || 'Erro desconhecido'}`;
+      } else {
+        errorMessage += `: ${error.message}`;
+      }
+      alert(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -72,6 +81,7 @@ export default function CreateTeam() {
             placeholder="Nome da equipa"
             value={nome_equipa}
             onChange={e => setNomeEquipa(e.target.value)}
+            disabled={isLoading}
           />
         </div>
 
@@ -84,6 +94,7 @@ export default function CreateTeam() {
             placeholder="Abreviatura"
             value={abrev}
             onChange={e => setAbrev(e.target.value)}
+            disabled={isLoading}
           />
         </div>
 
@@ -96,6 +107,7 @@ export default function CreateTeam() {
             placeholder="Ano de fundação"
             value={ano_fundacao}
             onChange={e => setAnoFundacao(e.target.value)}
+            disabled={isLoading}
           />
         </div>
 
@@ -108,6 +120,7 @@ export default function CreateTeam() {
             placeholder="Nome do estádio"
             value={nome_estadio}
             onChange={e => setNomeEstadio(e.target.value)}
+            disabled={isLoading}
           />
         </div>
 
@@ -120,6 +133,7 @@ export default function CreateTeam() {
             placeholder="URL do emblema"
             value={emblema}
             onChange={e => setEmblema(e.target.value)}
+            disabled={isLoading}
           />
         </div>
       </div>
@@ -129,8 +143,14 @@ export default function CreateTeam() {
         type="button"
         className="btn btn-primary mt-3 bot"
         onClick={sendSave}
+        disabled={isLoading}
       >
-        Adicionar Equipa
+        {isLoading ? (
+          <>
+            <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <span className="ml-2">A Processar...</span>
+          </>
+        ) : "Adicionar Equipa"}
       </button>
     </div>
   );

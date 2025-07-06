@@ -1,14 +1,12 @@
 import React, { useState } from "react";
-import { useParams } from "react-router-dom"; // importa useParams
+import { useParams } from "react-router-dom";
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
-
-
-const baseUrl = "http://localhost:8080";
+import { API_BASE_URL } from '../config'; // Importe a configuração da URL base
 
 export default function CreatePlayer() {
-    const { teamId } = useParams(); // obtém o teamId da URL
+    const { teamId } = useParams();
 
     const [Nome, setNomePlayer] = useState("");
     const [idade, setIdade] = useState("");
@@ -16,42 +14,54 @@ export default function CreatePlayer() {
     const [altura, setAltura] = useState("");
     const [golos, setGolos] = useState("");
     const [assistencias, setAssistencias] = useState("");
+    const [isLoading, setIsLoading] = useState(false); // Estado para loading
 
     function SendSave() {
         if (Nome === "" || idade === "" || posicao === "" || altura === "" || golos === "" || assistencias === "") {
             alert("Preenche todos os campos!");
+            return;
         }
-        else {
-            const url = baseUrl + "/player/create";
-            const datapost = {
-                Nome: Nome,
-                idade: idade,
-                posicao: posicao,
-                altura: altura,
-                team_id: teamId, // associa o jogador à equipa
-                golos: golos,
-                assistencias: assistencias
-            };
-            axios.post(url, datapost)
-                .then(response => {
-                    if (response.data.success === true) {
-                        alert(response.data.message);
-                        // Limpa os campos após adicionar
-                        setNomePlayer("");
-                        setIdade("");
-                        setPosicao("");
-                        setAltura("");
-                        setGolos("");
-                        setAssistencias("");
-                    }
-                    else {
-                        alert(response.data.message);
-                    }
-                })
-                .catch(error => {
-                    alert("Erro: " + error);
+
+        setIsLoading(true);
+        
+        const url = `${API_BASE_URL}/player/create`; // Use a URL base da configuração
+        const datapost = {
+            Nome,
+            idade,
+            posicao,
+            altura,
+            team_id: teamId,
+            golos,
+            assistencias
+        };
+
+        axios.post(url, datapost)
+            .then(response => {
+                if (response.data.success) {
+                    alert(response.data.message);
+                    // Limpa os campos
+                    setNomePlayer("");
+                    setIdade("");
+                    setPosicao("");
+                    setAltura("");
+                    setGolos("");
+                    setAssistencias("");
+                } else {
+                    alert(response.data.message);
+                }
+            })
+            .catch(error => {
+                console.error("Axios Error:", {
+                    URL: url,
+                    Method: "POST",
+                    Error: error.message,
+                    Code: error.code
                 });
-        }
+                alert("Erro ao criar jogador: " + (error.response?.data?.message || error.message));
+            })
+            .finally(() => {
+                setIsLoading(false);
+            });
     }
 
     return (
@@ -63,45 +73,62 @@ export default function CreatePlayer() {
                     <input type="text"
                         className="form-control"
                         value={Nome}
-                        onChange={e => setNomePlayer(e.target.value)} />
+                        onChange={e => setNomePlayer(e.target.value)}
+                        disabled={isLoading} />
                 </div>
                 <div className='form-group col-md-6 mt-2'>
                     <label>Idade:</label>
                     <input type="number"
                         className="form-control"
                         value={idade}
-                        onChange={e => setIdade(e.target.value)} />
+                        onChange={e => setIdade(e.target.value)}
+                        disabled={isLoading} />
                 </div>
                 <div className='form-group col-md-6 mt-2'>
                     <label>Posição:</label>
                     <input type="text"
                         className="form-control"
                         value={posicao}
-                        onChange={e => setPosicao(e.target.value)} />
+                        onChange={e => setPosicao(e.target.value)}
+                        disabled={isLoading} />
                 </div>
                 <div className='form-group col-md-6 mt-2'>
                     <label>Altura (cm):</label>
                     <input type="number"
                         className="form-control"
                         value={altura}
-                        onChange={e => setAltura(e.target.value)} />
+                        onChange={e => setAltura(e.target.value)}
+                        disabled={isLoading} />
                 </div>
                 <div className='form-group col-md-6 mt-2'>
                     <label>Golos:</label>
                     <input type="number"
                         className="form-control"
                         value={golos}
-                        onChange={e => setGolos(e.target.value)} />
+                        onChange={e => setGolos(e.target.value)}
+                        disabled={isLoading} />
                 </div>
                 <div className='form-group col-md-6 mt-2'>
                     <label>Assistências:</label>
                     <input type="number"
                         className="form-control"
                         value={assistencias}
-                        onChange={e => setAssistencias(e.target.value)} />
+                        onChange={e => setAssistencias(e.target.value)}
+                        disabled={isLoading} />
                 </div>
             </div>
-            <button type="submit" className="btn btn-primary mt-3 bot" onClick={() => SendSave()}>Adicionar</button>
+            <button 
+                type="submit" 
+                className="btn btn-primary mt-3 bot" 
+                onClick={SendSave}
+                disabled={isLoading}>
+                {isLoading ? (
+                    <>
+                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span className="ml-2">A Processar...</span>
+                    </>
+                ) : "Adicionar"}
+            </button>
         </div>
     );
 }

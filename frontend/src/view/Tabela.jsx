@@ -1,9 +1,7 @@
-// src/Tabela.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import "../css/Tabela.css";
-
-const baseUrl = "http://localhost:8080";
+import { API_BASE_URL } from '../config'; // Importe a URL base da configuração
 
 export default function Tabela({ isAdmin }) {
   const [teams, setTeams] = useState([]);
@@ -12,152 +10,290 @@ export default function Tabela({ isAdmin }) {
   const [selectedEmblems, setSelectedEmblems] = useState(Array(18).fill(""));
   const [topgolos, setTopGolos] = useState([]);
   const [topassistencias, setTopAssistencias] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     async function fetchData() {
-      const res = await axios.get(`${baseUrl}/team/list`);
-      if (res.data.success) {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Carrega a lista de equipas
+        const res = await axios.get(`${API_BASE_URL}/team/list`);
+        if (!res.data.success) {
+          throw new Error("Falha ao carregar equipas");
+        }
+        
         const allTeams = res.data.data;
         setTeams(allTeams);
 
+        // Carrega jogadores de todas as equipas
         let allPlayers = [];
         for (let team of allTeams) {
-          const pRes = await axios.get(`${baseUrl}/team/${team.id}/players`);
-          if (pRes.data.success) allPlayers = allPlayers.concat(pRes.data.data);
+          try {
+            const pRes = await axios.get(`${API_BASE_URL}/team/${team.id}/players`);
+            if (pRes.data.success) {
+              allPlayers = allPlayers.concat(pRes.data.data);
+            }
+          } catch (err) {
+            console.error(`Erro ao carregar jogadores da equipa ${team.id}:`, err);
+          }
         }
+        
         // Top 10 golos
-        const sortedG = allPlayers.slice().sort((a,b)=>b.golos-a.golos).slice(0,10);
+        const sortedG = [...allPlayers]
+          .sort((a, b) => b.golos - a.golos)
+          .slice(0, 10);
         setTopGolos(sortedG);
+        
         // Top 10 assistências
-        const sortedA = allPlayers.slice().sort((a,b)=>b.assistencias-a.assistencias).slice(0,10);
+        const sortedA = [...allPlayers]
+          .sort((a, b) => b.assistencias - a.assistencias)
+          .slice(0, 10);
         setTopAssistencias(sortedA);
-      }
+        
+        // Carrega seleções salvas
+        const st = JSON.parse(localStorage.getItem('selectedTeams') || Array(18).fill(""));
+        const ct = JSON.parse(localStorage.getItem('counters') || Array(18).fill(""));
+        const se = JSON.parse(localStorage.getItem('selectedEmblems') || Array(18).fill(""));
+        
+        setSelectedTeams(st);
+        setCounters(ct);
+        setSelectedEmblems(se);
 
-      const st = JSON.parse(localStorage.getItem('selectedTeams')||'[]');
-      const ct = JSON.parse(localStorage.getItem('counters')||'[]');
-      const se = JSON.parse(localStorage.getItem('selectedEmblems')||'[]');
-      if (st.length) setSelectedTeams(st);
-      if (ct.length) setCounters(ct);
-      if (se.length) setSelectedEmblems(se);
+      } catch (error) {
+        console.error("Erro ao carregar dados:", {
+          URL: `${API_BASE_URL}/team/list`,
+          Error: error.message,
+          Response: error.response?.data
+        });
+        setError("Erro ao carregar dados. Tente recarregar a página.");
+      } finally {
+        setIsLoading(false);
+      }
     }
+    
     fetchData();
   }, []);
 
-  const handleTeamChange = (i,v) => {
-    const u = [...selectedTeams]; u[i]=v; setSelectedTeams(u);
-    localStorage.setItem('selectedTeams',JSON.stringify(u));
-    const team = teams.find(t=>t.id===parseInt(v));
-    const ue = [...selectedEmblems]; ue[i]=team?team.emblema:""; setSelectedEmblems(ue);
-    localStorage.setItem('selectedEmblems',JSON.stringify(ue));
+  const handleTeamChange = (i, v) => {
+    const updatedTeams = [...selectedTeams];
+    updatedTeams[i] = v;
+    setSelectedTeams(updatedTeams);
+    localStorage.setItem('selectedTeams', JSON.stringify(updatedTeams));
+    
+    const team = teams.find(t => t.id === parseInt(v));
+    const updatedEmblems = [...selectedEmblems];
+    updatedEmblems[i] = team ? team.emblema : "";
+    setSelectedEmblems(updatedEmblems);
+    localStorage.setItem('selectedEmblems', JSON.stringify(updatedEmblems));
   };
 
-  const handleCounterChange = (i,v) => {
-    const u = [...counters]; u[i]=v; setCounters(u);
-    localStorage.setItem('counters',JSON.stringify(u));
+  const handleCounterChange = (i, v) => {
+    // Garante que o valor seja numérico e não negativo
+    const value = Math.max(0, parseInt(v) || "");
+    
+    const updatedCounters = [...counters];
+    updatedCounters[i] = value;
+    setCounters(updatedCounters);
+    localStorage.setItem('counters', JSON.stringify(updatedCounters));
+  };
+
+  // Função para encontrar o nome da equipa pelo ID
+  const getTeamName = (teamId) => {
+    const team = teams.find(t => String(t.id) === String(teamId));
+    return team ? team.nome_equipa : '-';
+  };
+
+  // Função para encontrar a abreviação da equipa pelo ID
+  const getTeamAbrev = (teamId) => {
+    const team = teams.find(t => String(t.id) === String(teamId));
+    return team ? team.abrev : '-';
   };
 
   return (
     <div className="container mt-3">
-      <h3>Classificação</h3>
-      <div className="row">
-        <div className="col-md-8">
-          <table className="table">
-            <thead className="head">
-              <tr>
-                <th className="posicao">#</th>
-                <th className="emblema"></th>
-                <th className="equipa">Equipa</th>
-                <th className="pontuacao">Pontuação</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Array.from({ length: 18 }, (_, i) => {
-                const available = teams.filter(
-                  t => !selectedTeams.includes(String(t.id)) || selectedTeams[i] === String(t.id)
-                );
-                const cls = i<1?'table-success': i>=15?'table-danger':'';
-                return (
-                  <tr key={i} className={cls}>
-                    <td className="posicao">{i+1}</td>
-                    <td className="emblema">
-                      {selectedEmblems[i]
-                        ? <img src={selectedEmblems[i]} alt="Emblema" style={{width:30,height:30}}/>
-                        : '-'
-                      }
-                    </td>
-                    <td className="equipa">
-                      {isAdmin
-                        ? (
-                          <select className="form-select"
-                            value={selectedTeams[i]}
-                            onChange={e=>handleTeamChange(i,e.target.value)}
-                          >
-                            <option value="">Seleciona equipa</option>
-                            {available.map(t=>(
-                              <option key={t.id} value={t.id}>{t.nome_equipa}</option>
-                            ))}
-                          </select>
-                        )
-                        : (teams.find(t=>String(t.id)===selectedTeams[i])?.nome_equipa || '-')
-                      }
-                    </td>
-                    <td className="pontuacao">
-                      {isAdmin
-                        ? (
-                          <input type="number" className="form-control text-center"
-                            style={{maxWidth:'70px'}}
-                            value={counters[i]}
-                            onChange={e=>handleCounterChange(i,e.target.value)}
-                          />
-                        )
-                        : (counters[i] || '-')
-                      }
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+      <h3 className="mb-4">Classificação da Liga</h3>
+      
+      {isLoading ? (
+        <div className="text-center my-5">
+          <div className="spinner-border text-primary" style={{ width: '3rem', height: '3rem' }} role="status">
+            <span className="visually-hidden">A Carregar...</span>
+          </div>
+          <p className="mt-3">A carregar dados da liga...</p>
         </div>
-
-        <div className="col-md-4">
-          <div className="mb-4 tabgolos">
-            <h4>Top 10 Golos</h4>
-            <table className="table table-striped golos">
-              <thead>
-                <tr><th>Jogador</th><th>Equipa</th><th>Golos</th></tr>
-              </thead>
-              <tbody>
-                {topgolos.map((p,i)=>(
-                  <tr key={i}>
-                    <td>{p.Nome}</td>
-                    <td>{teams.find(t=>t.id===p.team_id)?.abrev||'-'}</td>
-                    <td>{p.golos}</td>
+      ) : error ? (
+        <div className="alert alert-danger">
+          {error} <button className="btn btn-link p-0" onClick={() => window.location.reload()}>Recarregar página</button>
+        </div>
+      ) : (
+        <div className="row">
+          <div className="col-lg-8 mb-4">
+            <div className="table-responsive">
+              <table className="table table-hover tabela-classificacao">
+                <thead className="head">
+                  <tr>
+                    <th className="posicao">#</th>
+                    <th className="emblema">Emblema</th>
+                    <th className="equipa">Equipa</th>
+                    <th className="pontuacao">Pontuação</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {Array.from({ length: 18 }, (_, i) => {
+                    // Filtra equipas disponíveis para seleção
+                    const availableTeams = teams.filter(
+                      t => !selectedTeams.includes(String(t.id)) || selectedTeams[i] === String(t.id)
+                    );
+                    
+                    // Classes de destaque para posições
+                    const positionClass = 
+                      i < 4 ? 'table-success' : 
+                      i >= 14 ? 'table-danger' : 
+                      '';
+                    
+                    return (
+                      <tr key={i} className={positionClass}>
+                        <td className="posicao align-middle">{i+1}</td>
+                        <td className="emblema align-middle">
+                          {selectedEmblems[i] ? (
+                            <img 
+                              src={selectedEmblems[i]} 
+                              alt={`Emblema ${getTeamName(selectedTeams[i])}`}
+                              className="img-thumbnail"
+                              style={{ width: 40, height: 40 }}
+                            />
+                          ) : (
+                            <div className="bg-light border rounded d-flex justify-content-center align-items-center" 
+                                 style={{ width: 40, height: 40 }}>
+                              <span className="text-muted">-</span>
+                            </div>
+                          )}
+                        </td>
+                        <td className="equipa align-middle">
+                          {isAdmin ? (
+                            <select 
+                              className="form-select"
+                              value={selectedTeams[i]}
+                              onChange={e => handleTeamChange(i, e.target.value)}
+                            >
+                              <option value="">Selecionar equipa</option>
+                              {availableTeams.map(t => (
+                                <option key={t.id} value={t.id}>
+                                  {t.nome_equipa}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            getTeamName(selectedTeams[i])
+                          )}
+                        </td>
+                        <td className="pontuacao align-middle">
+                          {isAdmin ? (
+                            <input 
+                              type="number" 
+                              className="form-control text-center"
+                              style={{ maxWidth: '90px' }}
+                              min="0"
+                              value={counters[i]}
+                              onChange={e => handleCounterChange(i, e.target.value)}
+                            />
+                          ) : (
+                            counters[i] || '0'
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <div className="tabassists">
-            <h4>Top 10 Assistências</h4>
-            <table className="table table-striped assists">
-              <thead>
-                <tr><th>Jogador</th><th>Equipa</th><th>Assistências</th></tr>
-              </thead>
-              <tbody>
-                {topassistencias.map((p,i)=>(
-                  <tr key={i}>
-                    <td>{p.Nome}</td>
-                    <td>{teams.find(t=>t.id===p.team_id)?.abrev||'-'}</td>
-                    <td>{p.assistencias}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="col-lg-4">
+            <div className="card mb-4 shadow-sm">
+              <div className="card-header bg-primary text-white">
+                <h4 className="mb-0">Top 10 Goleadores</h4>
+              </div>
+              <div className="card-body p-0">
+                <div className="table-responsive">
+                  <table className="table table-hover mb-0">
+                    <thead>
+                      <tr>
+                        <th>Jogador</th>
+                        <th>Equipa</th>
+                        <th>Golos</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {topgolos.length > 0 ? (
+                        topgolos.map((p, i) => (
+                          <tr key={i}>
+                            <td>{p.Nome}</td>
+                            <td>
+                              <span className="badge bg-secondary">
+                                {getTeamAbrev(p.team_id)}
+                              </span>
+                            </td>
+                            <td className="fw-bold text-success">{p.golos}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="3" className="text-center py-4">
+                            Nenhum dado disponível
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div className="card shadow-sm">
+              <div className="card-header bg-info text-white">
+                <h4 className="mb-0">Top 10 Assistências</h4>
+              </div>
+              <div className="card-body p-0">
+                <div className="table-responsive">
+                  <table className="table table-hover mb-0">
+                    <thead>
+                      <tr>
+                        <th>Jogador</th>
+                        <th>Equipa</th>
+                        <th>Assist.</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {topassistencias.length > 0 ? (
+                        topassistencias.map((p, i) => (
+                          <tr key={i}>
+                            <td>{p.Nome}</td>
+                            <td>
+                              <span className="badge bg-secondary">
+                                {getTeamAbrev(p.team_id)}
+                              </span>
+                            </td>
+                            <td className="fw-bold text-primary">{p.assistencias}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="3" className="text-center py-4">
+                            Nenhum dado disponível
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
