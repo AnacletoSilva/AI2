@@ -1,0 +1,23 @@
+services:
+  # ─────────────── backend (Web Service) ───────────────
+  - type: web
+    name: backend
+    env: node
+    plan: starter            # ou free, conforme o teu plano
+    buildCommand: >
+      cd backend &&
+      npm install
+    startCommand: >
+      cd backend &&
+      npm run server       # executa apenas o servidor Express (src/index.js)
+
+  # ─────────────── frontend (Static Site) ───────────────
+  - type: static
+    name: frontend
+    env: static
+    plan: starter
+    buildCommand: >
+      cd frontend &&
+      npm install &&
+      npm run build
+    staticPublishPath: frontend/build
