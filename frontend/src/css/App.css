@@ -1,0 +1,19 @@
+.App{
+  background-color: rgba(255, 255, 255, 0.811);
+}
+
+.navbar-brand{
+  padding-left: 10px;
+  font-size: 200%;
+}
+
+.btn-primary {
+  margin-left: 25px;
+}
+
+.logo{
+  height: 3%;
+  width: 3%;
+}
+
+

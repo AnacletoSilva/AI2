@@ -1,0 +1,86 @@
+.head{
+    background-color: #f0f4fd;
+}
+
+.bot{
+    border-color: #112e67;
+    background-color: #112e67;
+}
+
+.table{
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.container h2{
+    color: #112e67;
+}
+
+
+.container h3{
+    color: #112e67;
+}
+
+.posicao{
+  width: 10px;
+  
+}
+
+.pontuacao {
+  width: 20px;
+  
+}
+
+.emblema {
+  width: 40px;
+}
+
+.pontuacao input {
+    border-width: 2px;
+    border-color: rgb(122, 120, 120);
+}
+
+.equipa select{
+    border-width: 2px;
+    border-color: rgb(122, 120, 120);
+}
+
+tbody{
+    background-color: #f0f4fd;
+}
+
+tbody tr:nth-child(1) .pontuacao input {
+  background-color: rgb(209, 231, 221);
+}
+tbody tr:nth-child(1) .equipa select {
+  background-color: rgb(209, 231, 221);
+}
+
+
+tbody tr:nth-child(16) .equipa select,
+tbody tr:nth-child(17) .equipa select,
+tbody tr:nth-child(18) .equipa select {
+  background-color: rgb(248, 215, 218);
+}
+
+tbody tr:nth-child(16) .pontuacao input,
+tbody tr:nth-child(17) .pontuacao input,
+tbody tr:nth-child(18) .pontuacao input {
+  background-color: rgb(248, 215, 218);
+}
+
+.tabgolos h4{
+    color: #112e67;
+}
+
+.golos th{
+    color: #112e67;
+}
+
+.tabassists h4{
+    color: #112e67;
+}
+
+.assists th{
+    color: #112e67;
+}
