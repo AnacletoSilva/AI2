@@ -1,4 +1,10 @@
-const { Sequelize } = require('sequelize');
+// database.js
+const { Sequelize } = require('sequelize'); // Importe Sequelize
+
+// Verifique se DATABASE_URL existe
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL não definida!');
+}
 
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'postgres',
@@ -9,3 +15,5 @@ const sequelize = new Sequelize(process.env.DATABASE_URL, {
     }
   } : {}
 });
+
+module.exports = sequelize; // Exporte a instância
