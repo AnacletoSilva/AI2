@@ -1,9 +1,9 @@
-require('dotenv').config(); // Adicione no topo para carregar variáveis de ambiente
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const playerRoute = require('./routes/playerRoute');
 const teamRoute = require('./routes/teamRoute');
-const sequelize = require('./models/database'); // Importe o sequelize
+const sequelize = require('./models/database'); // Importa a instância do Sequelize
 
 app.set('port', process.env.PORT || 8080);
 
@@ -17,19 +17,54 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // Corrigido: { extended: true }
+app.use(express.urlencoded({ extended: true }));
 
 // Rotas
 app.use('/', playerRoute);
 app.use('/team', teamRoute);
 
-// Sincronizar modelos com o banco de dados e iniciar o servidor
-sequelize.sync() // SEM alter: true em produção!
-  .then(() => {
-    app.listen(app.get('port'), () => {
-      console.log("Start server on port " + app.get('port'));
-    });
-  })
-  .catch(err => {
-    console.error('Unable to sync database:', err);
+// Função para verificar e sincronizar o banco de dados
+const initializeDB = async () => {
+  try {
+    // 1. Autenticar com o banco de dados
+    await sequelize.authenticate();
+    console.log('✅ Conexão com o banco de dados estabelecida!');
+    
+    // 2. Verificar se a tabela 'teams' já existe
+    const [teamsExist] = await sequelize.query(`
+      SELECT EXISTS (
+        SELECT FROM pg_tables
+        WHERE schemaname = 'public' 
+        AND tablename = 'teams'
+      );
+    `);
+    
+    // 3. Sincronizar apenas se a tabela não existir
+    if (!teamsExist[0].exists) {
+      console.log('🔄 Tabelas não encontradas. Sincronizando...');
+      await sequelize.sync(); // Cria todas as tabelas
+      console.log('🔄 Tabelas sincronizadas com sucesso!');
+    } else {
+      console.log('ℹ️ Tabelas já existem. Pulando sincronização.');
+    }
+  } catch (error) {
+    console.error('❌ Erro na inicialização do banco de dados:', error);
+  }
+};
+
+// Inicializar o banco de dados e iniciar o servidor
+initializeDB().then(() => {
+  // Iniciar o servidor na porta configurada, ouvindo em 0.0.0.0
+  app.listen(app.get('port'), '0.0.0.0', () => {
+    console.log(`🚀 Servidor rodando na porta ${app.get('port')}`);
   });
+});
+
+// Rota de teste simples
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'online',
+    database: 'connected',
+    timestamp: new Date()
+  });
+});
