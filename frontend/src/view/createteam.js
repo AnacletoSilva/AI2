@@ -140,7 +140,7 @@ export default function CreateTeam() {
       <button
         type="button"
         className="btn btn-primary mt-3 bot"
-        onClick={() => SendSave()}>Adicionar</button>
+        onClick={() => sendSave()}>Adicionar</button>
     </div>
   );
 }
