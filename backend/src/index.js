@@ -6,6 +6,8 @@ const pool = require('./db');
 const playerRoute = require('./routes/playerRoute');
 const teamRoute = require('./routes/teamRoute');
 const sequelize = require('./models/database');
+const jwt = require('jsonwebtoken');
+const authMiddleware = require('./authMiddleware');
 
 const app = express();
 app.set('port', process.env.PORT || 8080);
@@ -32,23 +34,33 @@ app.use((req, res, next) => {
 // 3) Endpoint de login admin
 app.post('/auth/admin-login', async (req, res) => {
   const { password } = req.body;
-  console.log('> admin-login password:', password);
+  
   try {
     const { rows } = await pool.query(
       'SELECT password_hash FROM admins WHERE id = $1',
       [1]
     );
+    
     if (rows.length === 0) {
       return res.status(500).json({ success: false, message: 'Admin não configurado' });
     }
 
     const hash = rows[0].password_hash;
     const match = await bcrypt.compare(password, hash);
+    
     if (!match) {
       return res.status(401).json({ success: false, message: 'Senha incorreta' });
     }
-    return res.json({ success: true });
-
+    
+    // GERA TOKEN JWT
+    const token = jwt.sign(
+      { adminId: 1 },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
+    
+    return res.json({ success: true, token }); // ENVIA TOKEN
+    
   } catch (err) {
     console.error('Erro no admin-login:', err);
     return res.status(500).json({ success: false, message: 'Erro no servidor' });
@@ -128,5 +140,13 @@ initializeDB().then(() => {
       console.error('❌ Erro no servidor:', error);
     }
     process.exit(1);
+  });
+});
+
+app.get('/admin/dashboard', authMiddleware, (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'Acesso autorizado ao painel admin',
+    adminId: req.adminData.adminId
   });
 });
