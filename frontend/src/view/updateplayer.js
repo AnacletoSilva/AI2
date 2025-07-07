@@ -8,6 +8,7 @@ import Swal from 'sweetalert2';
 
 export default function UpdatePlayer() {
   const { id } = useParams();
+  const { team_id } = useParams();
   const navigate = useNavigate();
   
   // Estados para os campos do jogador
