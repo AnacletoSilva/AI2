@@ -90,10 +90,10 @@ export default function UpdatePlayer() {
           showConfirmButton: false,
           timerProgressBar: true,
         }).then(() => {
-        navigate(`/team/${id}/players`);
+        navigate(`/team/${team_id}/players`);
         });
       }
-      
+
     } catch (error) {
       console.error("Erro ao atualizar jogador:", {
         URL: `${API_BASE_URL}/player/update/${id}`,
