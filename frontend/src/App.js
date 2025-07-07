@@ -73,7 +73,7 @@ function App() {
           <Route path="/team/list" element={<Listteam isAdmin={isAdmin} />} />
           <Route path="/team/create" element={isAdmin ? <Createteam /> : <Home isAdmin={isAdmin} />} />
           <Route path="/team/update/:id" element={isAdmin ? <Updateteam /> : <Home isAdmin={isAdmin} />} />
-          <Route path="/team/:team_id/players" element={<Listplayer isAdmin={isAdmin} />} />
+          <Route path="/team/:id/players" element={<Listplayer isAdmin={isAdmin} />} />
           <Route path="/player/create/:teamId" element={isAdmin ? <Createplayer /> : <Home isAdmin={isAdmin} />} />
           <Route path="/player/update/:id" element={isAdmin ? <Updateplayer /> : <Home isAdmin={isAdmin} />} />
         </Routes>
