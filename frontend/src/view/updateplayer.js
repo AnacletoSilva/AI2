@@ -82,12 +82,18 @@ export default function UpdatePlayer() {
       );
 
       if (response.data.success) {
-        Swal.fire('Sucesso!', response.data.message, 'success');
-        // Redireciona após 2 segundos
-        setTimeout(() => navigate(`/team/${id}/players`), 2000);
-      } else {
-        Swal.fire('Erro', response.data.message || 'Falha na atualização', 'error');
+        Swal.fire({
+          title: 'Sucesso!',
+          text: response.data.message,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false,
+          timerProgressBar: true,
+        }).then(() => {
+        navigate(`/team/${id}/players`);
+        });
       }
+      
     } catch (error) {
       console.error("Erro ao atualizar jogador:", {
         URL: `${API_BASE_URL}/player/update/${id}`,
