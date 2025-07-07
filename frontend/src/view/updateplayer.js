@@ -84,7 +84,7 @@ export default function UpdatePlayer() {
       if (response.data.success) {
         Swal.fire('Sucesso!', response.data.message, 'success');
         // Redireciona após 2 segundos
-        setTimeout(() => navigate('/player/list'), 2000);
+        setTimeout(() => navigate(`/team/${id}/players`), 2000);
       } else {
         Swal.fire('Erro', response.data.message || 'Falha na atualização', 'error');
       }
